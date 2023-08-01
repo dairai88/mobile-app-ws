@@ -1,5 +1,6 @@
 package com.example.ui.controller;
 
+import com.example.exceptions.UserServiceException;
 import com.example.ui.model.request.UpdateUserDetailsRequestModel;
 import com.example.ui.model.request.UserDetailsRequestModel;
 import com.example.ui.model.response.UserRest;
@@ -31,6 +32,10 @@ public class UserController {
                     MediaType.APPLICATION_JSON_VALUE
             })
     public ResponseEntity<UserRest> getUser(@PathVariable String userId) {
+        if (userId.equals("test")) {
+            throw new UserServiceException("A user service exception is thrown");
+        }
+
         if (users == null) {
             return ResponseEntity.noContent().build();
         }
@@ -84,8 +89,10 @@ public class UserController {
         return storedUserDetails;
     }
 
-    @DeleteMapping
-    public String deleteUser() {
-        return "delete user was called";
+    @DeleteMapping(path = "/{id}")
+    public ResponseEntity<Void> deleteUser(@PathVariable String id) {
+
+        users.remove(id);
+        return ResponseEntity.noContent().build();
     }
 }
