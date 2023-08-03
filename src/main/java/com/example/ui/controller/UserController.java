@@ -4,20 +4,25 @@ import com.example.exceptions.UserServiceException;
 import com.example.ui.model.request.UpdateUserDetailsRequestModel;
 import com.example.ui.model.request.UserDetailsRequestModel;
 import com.example.ui.model.response.UserRest;
+import com.example.userservice.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("users")
 public class UserController {
 
     Map<String, UserRest> users;
+
+    UserService userService;
+
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
 
     @GetMapping
     public String getUsers(@RequestParam(value = "page", defaultValue = "1") int page,
@@ -55,20 +60,8 @@ public class UserController {
             MediaType.APPLICATION_JSON_VALUE
     })
     public ResponseEntity<UserRest> createUser(@Valid @RequestBody UserDetailsRequestModel userDetails) {
-        UserRest returnValue = new UserRest();
-        returnValue.setEmail(userDetails.getEmail());
-        returnValue.setFirstName(userDetails.getFirstName());
-        returnValue.setLastName(userDetails.getLastName());
 
-        String userId = UUID.randomUUID().toString();
-        returnValue.setUserId(userId);
-
-        if (users == null) {
-            users = new HashMap<>();
-        }
-        users.put(userId, returnValue);
-
-        return ResponseEntity.ok(returnValue);
+        return ResponseEntity.ok(userService.createUser(userDetails));
     }
 
     @PutMapping(path = "/{userId}", consumes = {
