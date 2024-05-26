@@ -1,43 +1,34 @@
 package com.example.userservice.impl;
 
+import com.example.exceptions.UserServiceException;
+import com.example.repository.UserRespository;
 import com.example.shared.Utils;
 import com.example.ui.model.request.UpdateUserDetailsRequestModel;
 import com.example.ui.model.request.UserDetailsRequestModel;
 import com.example.ui.model.response.UserRest;
 import com.example.userservice.UserService;
-
 import org.springframework.stereotype.Service;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
 @Service
 public class UserServiceImpl implements UserService {
 
-    Map<String, UserRest> users;
-    Utils utils;
+    private final UserRespository userRespository;
+    private final Utils utils;
 
-    public UserServiceImpl(Utils utils) {
+    public UserServiceImpl(UserRespository userRespository, Utils utils) {
+        this.userRespository = userRespository;
         this.utils = utils;
     }
 
     @Override
-    public UserRest getUser(String userId) {
-        if (users == null) {
-            return null;
-        }
-
-        return users.get(userId);
+    public Iterable<UserRest> getUsers() {
+        return userRespository.findAll();
     }
 
     @Override
-    public Iterable<UserRest> getUsers() {
-        if (users == null) {
-            return new ArrayList<>();
-        }
-
-        return users.values();
+    public UserRest getUser(String userId) {
+        return userRespository.findByUserId(userId)
+                .orElseThrow(() -> new UserServiceException("User not found"));
     }
 
     @Override
@@ -50,29 +41,26 @@ public class UserServiceImpl implements UserService {
         String userId = utils.generateUserId();
         returnValue.setUserId(userId);
 
-        if (users == null) {
-            users = new HashMap<>();
-        }
-        users.put(userId, returnValue);
+        userRespository.save(returnValue);
 
         return returnValue;
     }
 
     @Override
     public UserRest updateUser(String userId, UpdateUserDetailsRequestModel userDetails) {
-        
-        UserRest storedUserDetails = users.get(userId);
+
+        UserRest storedUserDetails = userRespository.findByUserId(userId)
+                .orElseThrow(() -> new UserServiceException("User not found"));
         storedUserDetails.setFirstName(userDetails.getFirstName());
         storedUserDetails.setLastName(userDetails.getLastName());
 
-        users.put(userId, storedUserDetails);
+        userRespository.save(storedUserDetails);
 
         return storedUserDetails;
     }
 
     @Override
     public void deleteUser(String userId) {
-        users.remove(userId);
+        userRespository.deleteByUserId(userId);
     }
-    
 }
